@@ -2,32 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlowUpBehavior : StateMachineBehaviour
+public class Rain : StateMachineBehaviour
 {
-    public GameObject particleBlowUp;
-    public AudioClip song;
-    public AudioClip frequencyDrop;
-    public float musicFadeInSpeed = 1f;
+    public AudioClip rain;
+    public float timeToDecreaseAudio = 4f;
+    public float speedToDecreaseAudio = 1f;
 
     private AudioSource audioSource;
+
     //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        Instantiate(particleBlowUp, animator.transform.position, Quaternion.identity);
-        animator.gameObject.GetComponent<MeshRenderer>().enabled = false;
-        audioSource = animator.GetComponent<AudioSource>();
-
-        AudioSource.PlayClipAtPoint(frequencyDrop, Vector3.zero);
-        audioSource.clip = song;
+        audioSource = animator.gameObject.GetComponent<AudioSource>();
+        audioSource.clip = rain;
         audioSource.Play();
     }
 
-    //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if(audioSource.volume < 1)
+        if(Time.timeSinceLevelLoad > timeToDecreaseAudio)
         {
-            audioSource.volume += (Time.unscaledDeltaTime * musicFadeInSpeed);
+            audioSource.volume = Mathf.Clamp(audioSource.volume - (Time.deltaTime * speedToDecreaseAudio), 0f, 1f);
         }
     }
 

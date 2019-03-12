@@ -64,6 +64,11 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 m_AnimSpeedMultiplier = animSlowDown;
                 m_MoveSpeedMultiplier = 1 / m_AnimSpeedMultiplier;
             }
+            else
+            {
+                m_AnimSpeedMultiplier = 1f;
+                m_MoveSpeedMultiplier = 1f;
+            }
 			if (move.magnitude > 1f) move.Normalize();
 			move = transform.InverseTransformDirection(move);
 			CheckGroundStatus();

@@ -39,6 +39,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   particleBlowUp: {fileID: 2195678062565943800, guid: 0be721c775cbee7418881e8396712b8c,
     type: 3}
+  song: {fileID: 8300000, guid: 979bda6216e3af247a6a1a710476452d, type: 3}
+  frequencyDrop: {fileID: 8300000, guid: bfbc778e532cdb84480f3ff876be53d8, type: 3}
   slowDown: 0.03
   slowDownSpeed: 0.8
   musicFadeInSpeed: 0.3
@@ -54,7 +56,8 @@ AnimatorState:
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 2598738273527880685}
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: -1808547150419386076}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -69,6 +72,21 @@ AnimatorState:
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
+--- !u!114 &-1808547150419386076
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b521c4696b746447a1b26c41a8dca3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rain: {fileID: 8300000, guid: 254c3506cfbdc4b4faa6d40413a9e6e3, type: 3}
+  timeToDecreaseAudio: 2.5
+  speedToDecreaseAudio: 0.5
 --- !u!91 &9100000
 AnimatorController:
   m_ObjectHideFlags: 0
