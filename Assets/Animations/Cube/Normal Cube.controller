@@ -42,7 +42,7 @@ MonoBehaviour:
   slowDown: 0.03
   slowDownSpeed: 0.8
   musicFadeInSpeed: 0.3
-  slowDownTime: 1
+  slowDownTime: 0
 --- !u!1102 &-4435631825086000941
 AnimatorState:
   serializedVersion: 5
@@ -76,7 +76,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Cube
+  m_Name: Normal Cube
   serializedVersion: 5
   m_AnimatorParameters: []
   m_AnimatorLayers:

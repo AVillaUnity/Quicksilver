@@ -157,8 +157,10 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			m_Animator.SetBool("OnGround", m_IsGrounded);
 			if (!m_IsGrounded)
 			{
-                float jumpAnim = Fit(extraGravity.y / 100f, m_InitialJumpPower / Time.timeScale, -9f, 5f, m_Rigidbody.velocity.y);
-				m_Animator.SetFloat("Jump", jumpAnim);
+                Vector3 locVel = transform.InverseTransformDirection(m_Rigidbody.velocity);
+                locVel.Normalize();
+                //float jumpAnim = Fit(locVel.y / 100f, m_InitialJumpPower / Time.timeScale, -9f, 5f, m_Rigidbody.velocity.y);
+				m_Animator.SetFloat("Jump", locVel.y);
                 //print(m_Rigidbody.velocity.y + " to " + jumpAnim);
 			}
 
@@ -172,11 +174,11 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			if (m_IsGrounded)
 			{
 				m_Animator.SetFloat("JumpLeg", jumpLeg);
-			}
+            }
 
-			// the anim speed multiplier allows the overall speed of walking/running to be tweaked in the inspector,
-			// which affects the movement speed because of the root motion.
-			if (m_IsGrounded && move.magnitude > 0)
+            // the anim speed multiplier allows the overall speed of walking/running to be tweaked in the inspector,
+            // which affects the movement speed because of the root motion.
+            if (m_IsGrounded && move.magnitude > 0)
 			{
 				m_Animator.speed = m_AnimSpeedMultiplier;
 			}
@@ -313,7 +315,9 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 yield return null; // return here next frame
             }
             currentNormal = normal; // update myNormal
-            //m_Rigidbody.velocity = Vector3.zero;
+            m_Rigidbody.velocity = Vector3.zero;
+            m_GroundNormal = normal;
+            m_IsGrounded = true;
         }
 
     }

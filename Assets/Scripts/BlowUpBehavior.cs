@@ -8,6 +8,7 @@ public class BlowUpBehavior : StateMachineBehaviour
     public float slowDown = .3f;
     public float slowDownSpeed = .5f;
     public float musicFadeInSpeed = 1f;
+    public bool slowDownTime = false;
 
     private AudioSource audioSource;
     //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
@@ -17,12 +18,16 @@ public class BlowUpBehavior : StateMachineBehaviour
         animator.gameObject.GetComponent<MeshRenderer>().enabled = false;
         audioSource = animator.GetComponent<AudioSource>();
 
-        audioSource.Play();
+        if (slowDownTime)
+        {
+            audioSource.Play();
+        }
     }
 
     //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        if(!slowDownTime) { return; }
         if(Time.timeScale > slowDown)
         {
             Time.timeScale = Mathf.Clamp(Time.timeScale - Time.unscaledDeltaTime * slowDownSpeed, 0f, 1f);
