@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace UnityStandardAssets.Characters.ThirdPerson
@@ -18,6 +19,8 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         [SerializeField] float timeScale = 0.03f;
         [SerializeField] float animSlowDown = 0.5f;
 
+        public float jumpRange = 15f;
+
         Rigidbody m_Rigidbody;
 		Animator m_Animator;
 		bool m_IsGrounded;
@@ -30,10 +33,11 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		Vector3 m_CapsuleCenter;
 		CapsuleCollider m_Capsule;
 		bool m_Crouching;
-        Vector3 m_InitialGravity;
+        float m_InitialGravity;
         Vector3 extraGravity;
+        private Vector3 currentNormal;
 
-
+        public LayerMask layerMask;
 
 
         void Start()
@@ -43,13 +47,15 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			m_Capsule = GetComponent<CapsuleCollider>();
 			m_CapsuleHeight = m_Capsule.height;
 			m_CapsuleCenter = m_Capsule.center;
-            m_InitialGravity = Physics.gravity;
+            m_InitialGravity = Physics.gravity.y;
 
 
             m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 			m_OrigGroundCheckDistance = m_GroundCheckDistance;
 
             m_Animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            currentNormal = transform.up;
 		}
 
 
@@ -64,12 +70,23 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 m_AnimSpeedMultiplier = animSlowDown;
                 m_MoveSpeedMultiplier = 1 / m_AnimSpeedMultiplier;
             }
-			if (move.magnitude > 1f) move.Normalize();
-			move = transform.InverseTransformDirection(move);
+            //print("move: " + move + "magnitude: " + move.magnitude);
+			if (move.magnitude > 1f)
+            {
+                move.Normalize();
+               // print("move after normalize: " + move);
+            }
+
+            move = transform.InverseTransformDirection(move);
+            //print("move after inverseTransformDirection: " + move);
 			CheckGroundStatus();
-			move = Vector3.ProjectOnPlane(move, m_GroundNormal);
+			//move = Vector3.ProjectOnPlane(move, currentNormal);
+            //print("move after project on plane: " + move);
 			m_TurnAmount = Mathf.Atan2(move.x, move.z);
+            //print("turnAmount: " + m_TurnAmount);
 			m_ForwardAmount = move.z;
+            //print("forwardAmound: " + m_ForwardAmount);
+            //print("----------------------------------------------------");
 
 			ApplyExtraTurnRotation();
 
@@ -175,11 +192,14 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		{
             // apply extra gravity from multiplier:
             float gravityMultiplier = m_InitialGravityMultiplier / Time.timeScale;
-            Vector3 myGravity = m_InitialGravity / Time.timeScale;
+            Vector3 myGravity = (m_InitialGravity * currentNormal) / Time.timeScale;
             extraGravity = (myGravity * gravityMultiplier) - myGravity;
 			m_Rigidbody.AddForce(extraGravity / (1 / Mathf.Pow(Time.timeScale, .2f)));
 
-			m_GroundCheckDistance = m_Rigidbody.velocity.y < 0 ? m_OrigGroundCheckDistance : 0.01f;
+            Vector3 locVel = transform.InverseTransformDirection(m_Rigidbody.velocity);
+
+            m_GroundCheckDistance = locVel.y < 0 ? m_OrigGroundCheckDistance : 0.01f;
+            //print("rb: " + m_Rigidbody.velocity + " | gc: " + m_GroundCheckDistance + " | locVel: " + locVel);
 		}
 
 
@@ -190,11 +210,17 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			{
                 // jump!
                 float jumpForce = m_InitialJumpPower / Time.timeScale;
-				m_Rigidbody.velocity = new Vector3(m_Rigidbody.velocity.x, jumpForce, m_Rigidbody.velocity.z);
+
+                Vector3 locVel = transform.InverseTransformDirection(m_Rigidbody.velocity);
+                locVel.y = jumpForce;
+                m_Rigidbody.velocity = transform.TransformDirection(locVel);
+
+                //m_Rigidbody.velocity = new Vector3(m_Rigidbody.velocity.x, jumpForce, m_Rigidbody.velocity.z);
 				m_IsGrounded = false;
 				m_Animator.applyRootMotion = false;
 				m_GroundCheckDistance = 0.1f;
-			}
+                CheckForWall();
+            }
 		}
 
 		void ApplyExtraTurnRotation()
@@ -205,33 +231,33 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		}
 
 
-		public void OnAnimatorMove()
-		{
+        public void OnAnimatorMove()
+        {
 
             float moveSpeed = m_MoveSpeedMultiplier / Time.timeScale;
             // we implement this function to override the default root motion.
             // this allows us to modify the positional speed before it's applied.
             if (m_IsGrounded && Time.unscaledDeltaTime > 0)
-			{
-				Vector3 v = (m_Animator.deltaPosition * moveSpeed) / Time.unscaledDeltaTime;
+            {
+                Vector3 v = (m_Animator.deltaPosition * moveSpeed) / Time.unscaledDeltaTime;
 
-				// we preserve the existing y part of the current velocity.
-				v.y = m_Rigidbody.velocity.y;
-				m_Rigidbody.velocity = v;
-			}
-		}
+                // we preserve the existing y part of the current velocity.
+                //v.y = m_Rigidbody.velocity.y;
+                m_Rigidbody.velocity = v;
+            }
+        }
 
 
-		void CheckGroundStatus()
+        void CheckGroundStatus()
 		{
 			RaycastHit hitInfo;
 #if UNITY_EDITOR
 			// helper to visualise the ground check ray in the scene view
-			Debug.DrawLine(transform.position + (Vector3.up * 0.1f), transform.position + (Vector3.up * 0.1f) + (Vector3.down * m_GroundCheckDistance));
+			Debug.DrawLine(transform.position + (transform.up * 0.1f), transform.position + (transform.up * 0.1f) + (-transform.up * m_GroundCheckDistance));
 #endif
 			// 0.1f is a small offset to start the ray from inside the character
 			// it is also good to note that the transform position in the sample assets is at the base of the character
-			if (Physics.Raycast(transform.position + (Vector3.up * 0.1f), Vector3.down, out hitInfo, m_GroundCheckDistance))
+			if (Physics.Raycast(transform.position + (transform.up * 0.1f), -transform.up, out hitInfo, m_GroundCheckDistance))
 			{
 				m_GroundNormal = hitInfo.normal;
 				m_IsGrounded = true;
@@ -240,7 +266,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			else
 			{
 				m_IsGrounded = false;
-				m_GroundNormal = Vector3.up;
+				m_GroundNormal = transform.up;
 				m_Animator.applyRootMotion = false;
 			}
 		}
@@ -254,5 +280,41 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
             return (NewValue);
         }
+
+        void CheckForWall()
+        {
+            Ray ray = Camera.main.ViewportPointToRay(new Vector3(.5f, .5f, 0f));
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, jumpRange, layerMask))
+            { // wall ahead?
+                if(hitInfo.normal != currentNormal)
+                    JumpToWall(hitInfo.normal); // yes: jump to the wall
+            }
+        }
+
+        private void JumpToWall(Vector3 normal)
+        {
+            Quaternion orgRot = transform.rotation;
+            Vector3 myForward = Vector3.Cross(transform.right, normal);
+            Quaternion dstRot = Quaternion.LookRotation(myForward, normal);
+
+            StartCoroutine(Jump(orgRot, dstRot, normal));
+            //jumptime
+        }
+
+        private IEnumerator Jump(Quaternion orgRot, Quaternion dstRot, Vector3 normal)
+        {
+            float t = 0f;
+            Vector3 originalNormal = currentNormal;
+            while (t < 1f)
+            {
+                transform.rotation = Quaternion.Slerp(orgRot, dstRot, t);
+                currentNormal = Vector3.Lerp(originalNormal, normal, t);
+                t += Time.unscaledDeltaTime * 2;
+                yield return null; // return here next frame
+            }
+            currentNormal = normal; // update myNormal
+            //m_Rigidbody.velocity = Vector3.zero;
+        }
+
     }
 }

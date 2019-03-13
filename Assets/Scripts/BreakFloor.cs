@@ -4,22 +4,22 @@ public class BreakFloor : MonoBehaviour
 {
     public GameObject breakParticles;
     public float timeScale = .03f;
-    public Transform[] footPositions;
+    public Transform leftPosition;
+    public Transform rightPosition;
     // Start is called before the first frame update
-    public void DestroyFloor()
+    public void LeftFootCrack()
     {
         if(Time.timeScale <= timeScale)
         {
-            Vector3 positionToSpawnIn = footPositions[0].position;
-            foreach(Transform t in footPositions)
-            {
-                if(t.position.y < positionToSpawnIn.y)
-                {
-                    positionToSpawnIn = t.position;
-                    break;
-                }
-            }
-            Instantiate(breakParticles, positionToSpawnIn, Quaternion.identity);
+            Instantiate(breakParticles, leftPosition.position, leftPosition.rotation);
+        }
+    }
+
+    public void RightFootCrack()
+    {
+        if (Time.timeScale <= timeScale)
+        {
+            Instantiate(breakParticles, rightPosition.position, rightPosition.rotation);
         }
     }
 }
